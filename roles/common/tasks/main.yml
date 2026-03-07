@@ -1,0 +1,13 @@
+---
+- name: Swap 비활성화
+  shell: |
+    swapoff -a
+    sed -i '/swap/s/^/#/' /etc/fstab
+
+- name: 필수 패키지 설치
+  apt:
+    name:
+      - curl
+      - cifs-utils
+    state: present
+    update_cache: yes

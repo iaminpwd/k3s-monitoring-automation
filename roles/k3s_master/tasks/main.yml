@@ -1,0 +1,45 @@
+---
+- name: K3s 마스터 설치 스크립트 실행
+  shell: |
+    curl -sfL https://get.k3s.io | sh -s - server \
+    --node-ip={{ ansible_host }} \
+    --flannel-iface=eth1 \
+    --write-kubeconfig-mode 644
+  register: k3s_install_result
+  # 아래 핸들러(restart k3s)를 호출합니다.
+  notify: restart k3s 
+
+- name: 마스터 노드 토큰 추출
+  command: cat /var/lib/rancher/k3s/server/node-token
+  register: k3s_token
+  changed_when: false
+
+- name: 토큰을 모든 호스트가 공유할 수 있도록 팩트(Fact)로 등록
+  set_fact:
+    join_token: "{{ k3s_token.stdout }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all']}}"
+
+- name: .kube 디렉터리 생성
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
+
+- name: K3s 설정 파일을 사용자 config로 복사
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/vagrant/.kube/config
+    remote_src: true
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+  
+- name: 환경 변수에 KUBECONFIG 등록
+  lineinfile:
+    path: /home/vagrant/.bashrc
+    line: 'export KUBECONFIG=/home/vagrant/.kube/config'
+    state: present
