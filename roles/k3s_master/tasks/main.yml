@@ -6,11 +6,13 @@
     --node-ip={{ ansible_host }} \
     --flannel-iface=eth1 \
     --write-kubeconfig-mode 644
+  args:
+    creates: /usr/local/bin/k3s
   register: k3s_install_result
   notify: restart k3s 
 
 - name: 마스터 노드 토큰 추출
-  command: cat /var/lib/rancher/k3s/server/node-token
+  command: cat {{ k3s_token_path }}
   register: k3s_token
   changed_when: false
 
