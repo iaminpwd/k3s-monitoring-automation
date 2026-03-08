@@ -6,3 +6,4 @@ grafana_dashboards:
   - { id: 7362, revision: 5, name: "mysql" }
 
 grafana_dashboards_dir: "/var/lib/grafana/dashboards"
+
