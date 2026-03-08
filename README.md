@@ -1,4 +1,6 @@
 
+<img width="3357" height="1714" alt="스크린샷 2026-03-08 182741" src="https://github.com/user-attachments/assets/2a30ca7f-5fba-422d-a475-688cf4a5ff01" />
+
 # 🚀 K3s Monitoring Automation Stack
 
 이 프로젝트는 앤서블(Ansible)을 사용하여 **K3s 클러스터 구축**부터 **중앙 집중식 모니터링 시스템(Prometheus & Grafana)** 배포까지 전 과정을 자동화합니다. 특히 **Prometheus Remote Write** 모드를 적용하여 에이전트와 서버를 분리한 효율적인 메트릭 수집 환경을 제공합니다.
