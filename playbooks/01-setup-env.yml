@@ -4,6 +4,6 @@
   connection: local
   tasks:
     - name: "requirements.yml에 정의된 컬렉션 설치"
-      command: ansible-galaxy collection install -r requirements.yml
+      command: ansible-galaxy collection install -r ../requirements.yml
       register: galaxy_install
       changed_when: "'is already installed' not in galaxy_install.stdout"
