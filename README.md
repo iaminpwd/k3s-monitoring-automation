@@ -34,7 +34,9 @@
 
 ```text
 .
-[cite_start]├── ansible.cfg              # Ansible 실행 설정 및 Vault 경로 지정 [cite: 2]
+├── ansible.cfg              # Ansible 실행 설정 및 Vault 경로 지정 [cite: 2]
+├── site.yml                 # 전체 플레이북 통합 실행 파일
+├── requirements.yml         # 외부 Ansible Collection 의존성 관리
 ├── inventory/               # 서버 인벤토리 및 변수 관리
 │   ├── hosts.ini            # [control-plane], [web], [db] 그룹 정의
 │   └── group_vars/          # K3s 전역 변수 및 암호화된 비밀 정보
@@ -43,11 +45,15 @@
 │   ├── 02-install-k3s.yml   # K3s 마스터 및 워커 노드 구성
 │   ├── 03-monitoring.yml    # 중앙 모니터링 서버 및 K3s 에이전트 설치
 │   └── 04-install-pods.yml  # Nginx(HPA), MySQL 샘플 워크로드 배포
-├── roles/                   # 기능별 자동화 역할(Roles)
-│   ├── monitoring_stack     # Docker 기반 중앙 모니터링 시스템 구축
-│   ├── prometheus_agent     # K3s 내부 에이전트 및 RBAC 설정
-│   └── (common, k3s_*)      # 기초 환경 및 클러스터 구성
-└── site.yml                 # 전체 플레이북 통합 실행 파일
+└── roles/                   # 기능별 자동화 역할(Roles)
+    ├── common/              # 공통 시스템 설정
+    ├── docker_setup/        # Docker 설치 및 구성
+    ├── k3s_master/          # 기초 환경 및 클러스터 구성
+    ├── k3s_worker/          # 기초 환경 및 클러스터 구성
+    ├── monitoring_stack/    # Docker 기반 중앙 모니터링 시스템 구축
+    ├── prometheus_agent/    # K3s 내부 에이전트 및 RBAC 설정
+    ├── web_server/          # 샘플 워크로드 배포
+    └── mysql_server/        # 샘플 워크로드 배포
 
 ```
 
