@@ -4,10 +4,6 @@ global:
   external_labels:
     monitor: 'main-monitor'
 
-# [추가] 마운트된 알람 규칙 파일을 로드합니다.
-rule_files:
-  - "/etc/prometheus/rules/alerting.yml"
-
 scrape_configs:
   # 1. 프로메테우스 자체 메트릭 수집
   - job_name: 'prometheus'
