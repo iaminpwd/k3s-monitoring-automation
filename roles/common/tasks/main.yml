@@ -10,4 +10,14 @@
       - curl
       - cifs-utils
     state: present
-    update_cache: yes
+    update_cache: true
+
+- name: "리눅스 호스트네임을 hosts.ini 설정에 맞게 변경"
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: "/etc/hosts 파일에 자기 자신 등록 (이름 풀이용)"
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: "127.0.1.1 {{ inventory_hostname }}"

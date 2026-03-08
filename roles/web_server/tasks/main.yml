@@ -1,0 +1,14 @@
+---
+- name: Nginx 설정 및 배포 파일 전송
+  template:
+    src: "{{ item.src }}"
+    dest: "/tmp/{{ item.dest }}"
+  loop:
+    - { src: 'nginx-conf.yaml.j2', dest: 'nginx-conf.yaml' }
+    - { src: 'nginx-deployment.yaml.j2', dest: 'nginx-deployment.yaml' }
+
+- name: 쿠버네티스 Nginx 사이드카 배포
+  shell: "kubectl apply -f /tmp/{{ item }}"
+  loop:
+    - nginx-conf.yaml
+    - nginx-deployment.yaml
