@@ -8,7 +8,7 @@ services:
       - "9090:9090"
     volumes:
       - "/etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
-      - "/home/vagrant/prometheus_data:/prometheus"
+      - "{{ base_dir }}/prometheus_data:/prometheus"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -26,8 +26,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - "/home/vagrant/grafana_data:/var/lib/grafana"
-      - "/home/vagrant/grafana_dashboards:/var/lib/grafana/dashboards"
+      - "{{ base_dir }}/grafana_data:/var/lib/grafana"
+      - "{{ base_dir }}/grafana_dashboards:/var/lib/grafana/dashboards"
       - "/etc/grafana/provisioning:/etc/grafana/provisioning"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "1234"

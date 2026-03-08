@@ -6,7 +6,7 @@
     - common
 
 - name: K3s 마스터 노드 구성
-  hosts: master
+  hosts: control-plane
   become: true
   roles:
     - k3s_master
