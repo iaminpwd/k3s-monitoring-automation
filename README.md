@@ -1,30 +1,104 @@
+
 # 🚀 K3s Monitoring Automation Stack
 
-앤서블(Ansible)을 활용하여 K3s 클러스터의 상태를 중앙 집중식으로 모니터링하는 인프라 자동화 프로젝트입니다. **Prometheus Remote Write** 아키텍처를 채택하여 에이전트와 서버를 분리한 효율적인 모니터링 환경을 구축했습니다.
+이 프로젝트는 앤서블(Ansible)을 사용하여 **K3s 클러스터 구축**부터 **중앙 집중식 모니터링 시스템(Prometheus & Grafana)** 배포까지 전 과정을 자동화합니다. 특히 **Prometheus Remote Write** 모드를 적용하여 에이전트와 서버를 분리한 효율적인 메트릭 수집 환경을 제공합니다.
 
 ## 🏗️ Architecture
 
-본 프로젝트는 **Pull & Push 하이브리드 방식**을 사용하여 데이터 수집 효율을 극대화했습니다.
+본 인프라는 부하 분산과 가용성을 고려하여 **Pull & Push 하이브리드 모니터링** 구조를 가집니다.
 
-1. **K3s Node (Agent):** `Prometheus Agent` 모드로 작동하며 클러스터 내부 메트릭을 수집합니다.
-2. **Monitoring Node (Server):** 중앙 프로메테우스 서버가 `Remote Write` 데이터를 수신하고 `Grafana`를 통해 시각화합니다.
-3. **Ansible:** 전 과정을 코드로 자동화(IaC)하여 재현 가능한 인프라를 구축했습니다.
+* **Monitoring Node (Localhost):** Docker Compose를 통해 중앙 Prometheus 서버와 Grafana를 실행합니다. 에이전트가 보내는 데이터를 수신(Remote Write Receiver)하고 시각화하며, 알람을 관리합니다.
+* **K3s Agent Node:** K3s 클러스터 내부에서 Prometheus가 **에이전트 모드**로 동작하며, 수집한 메트릭을 중앙 서버로 즉시 전송하여 클러스터 부하를 최소화합니다.
+* **Sidecar Exporters:** Nginx와 MySQL 파드에 각각 전용 익스포터를 사이드카로 배치하여 상세 지표를 추출합니다.
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Automation:** Ansible
-* **Container:** Docker
-* **Orchestration:** K3s (Kubernetes)
-* **Monitoring:** Prometheus (Remote Write mode), Node Exporter
-* **Visualization:** Grafana
-* **Environment:** Vagrant, Ubuntu 22.04 LTS
+| Category | Technology |
+| --- | --- |
+| **Automation** | Ansible (Collections: `community.docker`) |
+| **Orchestration** | K3s (Lightweight Kubernetes) |
+| **Container** | Docker, Docker Compose (on Monitoring Node) |
+| **Monitoring** | Prometheus (Remote Write & Agent Mode), Node Exporter |
+| **Visualization** | Grafana (Automated Provisioning) |
+| **Alerting** | Discord Webhook Integration |
+
+---
+
+## 📂 Project Structure
+
+전체 디렉토리 구조와 주요 파일 역할은 다음과 같습니다.
+
+```text
+.
+[cite_start]├── ansible.cfg              # Ansible 실행 설정 및 Vault 경로 지정 [cite: 2]
+├── inventory/               # 서버 인벤토리 및 변수 관리
+│   ├── hosts.ini            # [control-plane], [web], [db] 그룹 정의
+│   └── group_vars/          # K3s 전역 변수 및 암호화된 비밀 정보
+├── playbooks/               # 4단계 배포 프로세스
+│   ├── 01-setup-env.yml     # 로컬 의존성(Docker Collection) 설치
+│   ├── 02-install-k3s.yml   # K3s 마스터 및 워커 노드 구성
+│   ├── 03-monitoring.yml    # 중앙 모니터링 서버 및 K3s 에이전트 설치
+│   └── 04-install-pods.yml  # Nginx(HPA), MySQL 샘플 워크로드 배포
+├── roles/                   # 기능별 자동화 역할(Roles)
+│   ├── monitoring_stack     # Docker 기반 중앙 모니터링 시스템 구축
+│   ├── prometheus_agent     # K3s 내부 에이전트 및 RBAC 설정
+│   └── (common, k3s_*)      # 기초 환경 및 클러스터 구성
+└── site.yml                 # 전체 플레이북 통합 실행 파일
+
+```
 
 ---
 
 ## ✨ Key Features & Implementation
 
-* **Remote Write Setup:** 중앙 서버의 부하를 줄이기 위해 에이전트 모드의 프로메테우스에서 데이터를 쏘아주는 방식 구현.
-* **RBAC Hardening:** 에이전트 파드가 클러스터 자원을 안전하게 조회할 수 있도록 전용 `ServiceAccount` 및 `ClusterRole` 적용.
-* **Containerized Monitoring:** Docker를 사용하여 프로메테우스 스택을 컨테이너화하고 데이터 영속성(Persistence) 확보.
+### 1. Prometheus Remote Write & Agent Mode
+
+* K3s 노드에 설치된 Prometheus를 `--agent` 모드로 활성화하여 로컬 저장소 부하를 없애고 중앙 서버로 데이터를 쏩니다.
+* 중앙 서버는 `--web.enable-remote-write-receiver` 옵션을 통해 데이터를 수신합니다.
+
+### 2. Automated Grafana Provisioning
+
+* **Dashboards:** K3s 클러스터, Node Exporter, MySQL, Nginx 대시보드가 자동으로 설치됩니다.
+* **Alerting:** CPU 80%, 메모리 90%, 디스크 20% 미만 등의 임계치 도달 시 Discord로 알람이 발송됩니다.
+
+### 3. Application Hardening & Scaling
+
+* **Nginx HPA:** CPU 사용량이 60%를 초과할 경우 최대 5개까지 파드를 자동 확장합니다.
+* **Security:** Discord Webhook은 **Ansible Vault**를 통해 암호화되고, K3s Secret으로 안전하게 관리됩니다.
+
+---
+
+## 🚀 Quick Start
+
+### 1. 사전 준비
+
+* 관리자 노드에 Ansible 설치
+* Vagrant 또는 대상 Ubuntu 서버 환경 구성 (`192.168.56.x` 대역 권장)
+
+### 2. 보안 설정
+
+`.vault_pass` 파일에 Vault 암호를 기재합니다. (해당 파일은 `.gitignore`에 의해 깃 관리에서 제외됩니다.)
+
+```bash
+echo "your_vault_password" > .vault_pass
+
+```
+
+### 3. 전체 배포 실행
+
+```bash
+# 의존성 컬렉션 설치 및 전체 인프라 배포
+ansible-playbook site.yml
+
+```
+
+---
+
+## 📊 Monitoring Dashboards
+
+배포 완료 후 아래 주소를 통해 대시보드에 접속할 수 있습니다.
+
+* **Grafana:** `http://localhost:3000` (ID: admin / PW: 1234)
+* **Prometheus:** `http://localhost:9090`
