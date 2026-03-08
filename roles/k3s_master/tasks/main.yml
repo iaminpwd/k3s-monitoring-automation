@@ -65,10 +65,12 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
 # 3. 노드 라벨링
-- name: 노드 라벨링 수행
-  shell: "kubectl label node {{ item.node }} node-role={{ item.role }} --overwrite"
-  loop:
-    - { node: 'worker1', role: 'web' }
-    - { node: 'worker2', role: 'web' }
-    - { node: 'db1', role: 'db' }
-  ignore_errors: true
+- name: 마스터가 모든 워커 노드를 순회하며 라벨링
+  shell: "kubectl label node {{ item }} node-role=web --overwrite"
+  loop: "{{ groups['web'] }}"
+  delegate_to: master
+
+- name: DB 그룹의 모든 노드 라벨링
+  shell: "kubectl label node {{ item }} node-role=db --overwrite"
+  loop: "{{ groups['db'] }}"
+  delegate_to: master

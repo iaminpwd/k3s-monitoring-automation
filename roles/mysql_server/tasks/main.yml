@@ -1,7 +1,3 @@
-- name: DB 노드 라벨링 (db1)
-  shell: "kubectl label node db1 node-role=db --overwrite"
-  delegate_to: master
-
 - name: MySQL 매니페스트 전송
   template:
     src: "{{ item }}"
